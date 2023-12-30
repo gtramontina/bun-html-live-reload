@@ -1,0 +1,3 @@
+{
+	"packages": ["nodejs_21@latest", "bun@1.0.18"]
+}
