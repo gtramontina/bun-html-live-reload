@@ -1,14 +1,14 @@
-import type {
-  Server,
-  ServerWebSocket,
-  WebSocketHandler,
-  WebSocketServeOptions,
-  BuildConfig,
-} from "bun";
 import { FSWatcher, watch } from "fs";
+import type {
+	BuildConfig,
+	Server,
+	ServerWebSocket,
+	WebSocketHandler,
+	WebSocketServeOptions,
+} from "bun";
 
 declare global {
-  var ws: ServerWebSocket<unknown> | undefined;
+	let ws: ServerWebSocket<unknown> | undefined;
 }
 
 const reloadCommand = "reload";
@@ -32,21 +32,21 @@ const makeLiveReloadScript = (wsUrl: string) => `
 `;
 
 export type PureWebSocketServeOptions<WebSocketDataType> = Omit<
-  WebSocketServeOptions<WebSocketDataType>,
-  "fetch" | "websocket"
+	WebSocketServeOptions<WebSocketDataType>,
+	"fetch" | "websocket"
 > & {
-  fetch(request: Request, server: Server): Promise<Response> | Response;
-  websocket?: WebSocketHandler<WebSocketDataType>;
+	fetch(request: Request, server: Server): Promise<Response> | Response;
+	websocket?: WebSocketHandler<WebSocketDataType>;
 };
 
 export type LiveReloadOptions = {
-  /**
-   * URL path used for websocket connection
-   * @default "__bun_live_reload_websocket__"
-   */
-  readonly wsPath?: string;
-  readonly buildConfig?: BuildConfig;
-  readonly watchPath?: string;
+	/**
+	 * URL path used for websocket connection
+	 * @default "__bun_live_reload_websocket__"
+	 */
+	readonly wsPath?: string;
+	readonly buildConfig?: BuildConfig;
+	readonly watchPath?: string;
 };
 
 /**
@@ -70,59 +70,59 @@ export type LiveReloadOptions = {
  *});
  */
 export const withHtmlLiveReload = <
-  WebSocketDataType,
-  T extends PureWebSocketServeOptions<WebSocketDataType>
+	WebSocketDataType,
+	T extends PureWebSocketServeOptions<WebSocketDataType>,
 >(
-  serveOptions: T,
-  options?: LiveReloadOptions
+	serveOptions: T,
+	options?: LiveReloadOptions,
 ): WebSocketServeOptions<WebSocketDataType> => {
-  const wsPath = options?.wsPath ?? "__bun_live_reload_websocket__";
+	const wsPath = options?.wsPath ?? "__bun_live_reload_websocket__";
 
-  const { buildConfig, watchPath } = options ?? {};
-  if (buildConfig) Bun.build(buildConfig);
-  let watcher: FSWatcher;
-  if (watchPath) watcher = watch(watchPath);
+	const { buildConfig, watchPath } = options ?? {};
+	if (buildConfig) Bun.build(buildConfig);
+	let watcher: FSWatcher;
+	if (watchPath) watcher = watch(watchPath);
 
-  return {
-    ...serveOptions,
-    fetch: async (req, server) => {
-      const wsUrl = `${server.hostname}:${server.port}/${wsPath}`;
-      if (req.url === `http://${wsUrl}`) {
-        const upgraded = server.upgrade(req);
+	return {
+		...serveOptions,
+		fetch: async (req, server) => {
+			const wsUrl = `${server.hostname}:${server.port}/${wsPath}`;
+			if (req.url === `http://${wsUrl}`) {
+				const upgraded = server.upgrade(req);
 
-        if (!upgraded) {
-          return new Response(
-            "Failed to upgrade websocket connection for live reload",
-            { status: 400 }
-          );
-        }
-        return;
-      }
+				if (!upgraded) {
+					return new Response(
+						"Failed to upgrade websocket connection for live reload",
+						{ status: 400 },
+					);
+				}
+				return;
+			}
 
-      const response = await serveOptions.fetch(req, server);
+			const response = await serveOptions.fetch(req, server);
 
-      if (!response.headers.get("Content-Type")?.startsWith("text/html")) {
-        return response;
-      }
+			if (!response.headers.get("Content-Type")?.startsWith("text/html")) {
+				return response;
+			}
 
-      const originalHtml = await response.text();
-      const liveReloadScript = makeLiveReloadScript(wsUrl);
-      const htmlWithLiveReload = originalHtml + liveReloadScript;
+			const originalHtml = await response.text();
+			const liveReloadScript = makeLiveReloadScript(wsUrl);
+			const htmlWithLiveReload = originalHtml + liveReloadScript;
 
-      return new Response(htmlWithLiveReload, response);
-    },
-    websocket: {
-      ...serveOptions.websocket,
-      open: async (ws) => {
-        globalThis.ws = ws;
-        await serveOptions.websocket?.open?.(ws);
+			return new Response(htmlWithLiveReload, response);
+		},
+		websocket: {
+			...serveOptions.websocket,
+			open: async (ws) => {
+				globalThis.ws = ws;
+				await serveOptions.websocket?.open?.(ws);
 
-        if (watcher)
-          watcher.on("change", async () => {
-            if (buildConfig) await Bun.build(buildConfig);
-            ws.send(reloadCommand);
-          });
-      },
-    },
-  };
+				if (watcher)
+					watcher.on("change", async () => {
+						if (buildConfig) await Bun.build(buildConfig);
+						ws.send(reloadCommand);
+					});
+			},
+		},
+	};
 };

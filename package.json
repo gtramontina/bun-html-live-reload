@@ -1,44 +1,17 @@
 {
-  "name": "bun-html-live-reload",
+  "name": "@gtramontina/bun-html-live-reload",
   "description": "HTML live reload for Bun",
-  "version": "0.1.2",
-  "module": "index.ts",
-  "type": "module",
-  "author": "aabccd021",
+  "version": "1.0.0",
+  "homepage": "https://github.com/gtramontina/bun-html-live-reload.git",
   "license": "MIT",
-  "eslintConfig": {
-    "extends": [
-      "plugin:prettier/recommended"
-    ],
-    "parser": "@typescript-eslint/parser"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aabccd021/bun-html-live-reload.git"
-  },
-  "keywords": [
-    "bun",
-    "html",
-    "web"
-  ],
-  "bugs": {
-    "url": "https://github.com/aabccd021/bun-html-live-reload/issues"
-  },
-  "homepage": "https://github.com/aabccd021/bun-html-live-reload#readme",
-  "files": [
-    "index.ts"
-  ],
+  "module": "index.ts",
+  "files": ["index.ts"],
+  "type": "module",
   "scripts": {
-    "start": "bun --hot example.ts",
-    "lint": "eslint . --ext ts"
+    "lint": "bun x @biomejs/biome check --vcs-client-kind=git --vcs-enabled=true --vcs-use-ignore-file=true . *.json",
+    "lint:fix": "bun x @biomejs/biome check --apply-unsafe --vcs-client-kind=git --vcs-enabled=true --vcs-use-ignore-file=true . *.json"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^5.54.0",
-    "bun-types": "^0.7.3",
-    "eslint": "^8.35.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.4",
-    "typescript": "^4.9.5"
+    "bun-types": "1.0.18"
   }
 }
