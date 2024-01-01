@@ -1,82 +1,95 @@
-# bun-html-live-reload
-
-HTML live reload for Bun
-
-## Installation
-
-```sh
-bun add -d bun-html-live-reload
-```
+<h1>
+    <img src="https://bun.sh/logo.svg" width="30" alt="Bun Logo"> Bun HTML Live Reload
+</h1>
 
 ## Getting Started
 
-```ts
-// example.ts
-import { withHtmlLiveReload } from "bun-html-live-reload";
+### Install
 
-export default withHtmlLiveReload({
-  fetch: () => {
-    return new Response("<div>hello world</div>", {
-      headers: { "Content-Type": "text/html" },
-    });
-  },
+```sh
+bun add -d @gtramontina.com/bun-html-live-reload
+```
+
+### Usage
+
+Using the following as a regular Bun server as a starting point:
+
+```ts
+// index.ts
+
+Bun.serve({
+    fetch: () => {
+        return new Response("<div>hello world!</div>", {
+            headers: { "Content-Type": "text/html" },
+        });
+    },
+    port: 8888,
 });
 ```
 
-- Wrap your regular [hot reloading Bun server](https://bun.sh/docs/runtime/hot#http-servers) with `withHtmlLiveReload`.
-- Run the server with `bun --hot example.ts`, open browser, and try to edit the `hello world` part.
-- The page should live reload as you edit!
-
-## Response Header
-
-This plugin relies on response header to identify html file,
-so don't forget to add `{ headers: { "Content-Type": "text/html" }, }` to your `Response`.
-
-## Options
-
-### `wsPath`
-
-URL path used for websocket connection.
-
-This library relies on websocket to live reload an HTML.
-The path `wsPath` will be used to upgrade HTTP connection to websocket one.
-
-For example, the default `wsPath` value `__bun_live_reload_websocket__`,
-will upgrade `http://localhost:3000/__bun_live_reload_websocket__`
-to `ws://localhost:3000/__bun_live_reload_websocket__`.
+Import `htmlLiveReload` and wrap your server with it:
 
 ```ts
-export default withHtmlLiveReload(
-  {
-    fetch: () => {
-      return new Response("<div>hello world</div>", {
-        headers: { "Content-Type": "text/html" },
-      });
-    },
-  },
-  {
-    wsPath: "your_ws_path",
-  }
+// index.ts
+
+import { htmlLiveReload } from "@gtramontina.com/bun-html-live-reload";
+
+Bun.serve(
+    htmlLiveReload({
+        fetch: () => {
+            return new Response("<div>hello world!</div>", {
+                headers: { "Content-Type": "text/html" },
+            });
+        },
+        port: 8888,
+    }),
 );
 ```
 
-### React HMR: `watchPath` and `buildConfig`
+Running the server with [`bun --hot index.ts`](https://bun.sh/docs/runtime/hot#hot-mode) will now force a reload of the current page whenever Bun `--hot` detects a change.
+It will also force a reload of the stylesheets when a change to a `text/css` file is detected.
+For an example, take a look at the [example](./example) directory and run `bun run:example`.
 
-The `watchPath` is the file or folder path that should be watched to trigger the reloads. This could be used to reload html files on changing files in other folders like `src` for react projects.
+## Options
 
-The `buildConfig` is used for running the `Bun.build()` command when the files in the `watchPath` change. The `Bun.build()` command will always be run once before starting the server.
+### `watchPath`
+
+Bun HTML Live Reload will always force a reload when running it `--hot`.
+In order to have a more fine-grained control over the files not detected by Bun's `--hot` mode, the `watchPath` option can be passed to `htmlLiveReload` as such:
 
 ```ts
-export default withHtmlLiveReload(
-  {
-    ...
-  },
-  {
-    watchPath: path.resolve(import.meta.dir, "src"),
-    buildConfig: {
-      entrypoints: ["./src/index.tsx"],
-      outdir: "./build"
-    }
-  }
+// index.ts
+
+import { htmlLiveReload } from "@gtramontina.com/bun-html-live-reload";
+
+Bun.serve(
+    htmlLiveReload(
+        { /* server options */ },
+        {
+            watchPath: path.resolve(import.meta.dir, "src"),
+        }
+    ),
+);
+```
+
+### `buildConfig`
+
+If your setup makes use of [`Bun.build()`](https://bun.sh/docs/bundler), you can forward the settings to `htmlLiveReload` via the `buildConfig` option:
+
+```ts
+// index.ts
+
+import { htmlLiveReload } from "@gtramontina.com/bun-html-live-reload";
+
+Bun.serve(
+    htmlLiveReload(
+        { /* server options */ },
+        {
+            buildConfig: {
+                entrypoints: ['./index.tsx'],
+                outdir: './build',
+            },
+        }
+    ),
 );
 ```
