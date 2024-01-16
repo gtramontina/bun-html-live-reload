@@ -119,6 +119,8 @@ export const htmlLiveReload = <
 
 					const body = await response.text();
 					const script = `<script src="/_live-reload.js"></script>`;
+
+					// @ts-ignore
 					return new Response(`${body}${script}`, response);
 				}
 			}
